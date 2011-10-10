@@ -447,6 +447,31 @@ traceur.define('syntax', function() {
     },
 
     // 7.4 Comments
+    scanSingleLineComment_: function(beginIndex) {
+      while (!this.isAtEnd_() && !isLineTerminator(this.peekChar_())) {
+        this.nextChar_();
+      }
+      return new LiteralToken(TokenType.SINGLE_LINE_COMMENT,
+                              this.getTokenString_(beginIndex),
+                              this.getTokenRange_(beginIndex));
+    },
+
+    scanMultiLineComment_: function(beginIndex) {
+      while (!this.isAtEnd_() &&
+             (this.peekChar_() != '*' || this.peekChar_(1) != '/')) {
+        this.nextChar_();
+      }
+      if (this.isAtEnd_()) {
+        this.reportError_(this.getPosition_(beginIndex),
+                          'Unterminated Multi-line Comment');
+      }
+      this.nextChar_(); // '*'
+      this.nextChar_(); // '/'
+      return new LiteralToken(TokenType.MULTI_LINE_COMMENT,
+                              this.getTokenString_(beginIndex),
+                              this.getTokenRange_(beginIndex));
+    },
+
     skipComments_: function() {
       while (this.skipComment_()) {}
     },
@@ -467,28 +492,23 @@ traceur.define('syntax', function() {
     },
 
     skipSingleLineComment_: function() {
-      while (!this.isAtEnd_() && !isLineTerminator(this.peekChar_())) {
-        this.nextChar_();
-      }
+      this.scanSingleLineComment_(this.index_);
     },
 
     skipMultiLineComment_: function() {
-      this.nextChar_(); // '/'
-      this.nextChar_(); // '*'
-      while (!this.isAtEnd_() &&
-             (this.peekChar_() != '*' || this.peekChar_(1) != '/')) {
-        this.nextChar_();
-      }
-      this.nextChar_();
-      this.nextChar_();
+      this.scanMultiLineComment_(this.index_);
     },
 
     /**
      * @private
      * @return {Token}
      */
-    scanToken_: function() {
-      this.skipComments_();
+    scanToken_: function(opt_scanComments) {
+      if (opt_scanComments) {
+        this.skipWhitespace_();
+      } else {
+        this.skipComments_();
+      }
       var beginToken = this.index_;
       if (this.isAtEnd_()) {
         return this.createToken_(TokenType.END_OF_FILE, beginToken);
@@ -607,11 +627,19 @@ traceur.define('syntax', function() {
           }
           return this.createToken_(TokenType.CARET, beginToken);
         case '/':
-          if (this.peek_('=')) {
-            this.nextChar_();
-            return this.createToken_(TokenType.SLASH_EQUAL, beginToken);
+          switch (this.peekChar_()) {
+            case '=':
+              this.nextChar_();
+              return this.createToken_(TokenType.SLASH_EQUAL, beginToken);
+            case '/':
+              this.nextChar_();
+              return this.scanSingleLineComment_(beginToken);
+            case '*':
+              this.nextChar_();
+              return this.scanMultiLineComment_(beginToken);
+            default:
+              return this.createToken_(TokenType.SLASH, beginToken);
           }
-          return this.createToken_(TokenType.SLASH, beginToken);
         case '+':
           switch (this.peekChar_()) {
             case '+':

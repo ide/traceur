@@ -132,6 +132,10 @@ traceur.define('syntax', function() {
     STRING: 'string literal',
     REGULAR_EXPRESSION: 'regular expression literal',
 
+    // Comments
+    SINGLE_LINE_COMMENT: 'single-line comment',
+    MULTI_LINE_COMMENT: 'multi-line comment',
+
     // Harmony extensions
     SPREAD: '...',
     AWAIT: 'await',

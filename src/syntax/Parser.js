@@ -356,6 +356,7 @@ traceur.define('syntax', function() {
       return this.parseIdentifierExpression_();
     },
 
+    // Comment
     // ClassDeclaration
     // TraitDeclaration
     // ImportDeclaration
@@ -364,6 +365,11 @@ traceur.define('syntax', function() {
     // TODO: ModuleBlock
     // Statement (other than BlockStatement)
     // FunctionDeclaration
+
+    peekComment_: function() {
+      return this.peek_(TokenType.SINGLE_LINE_COMMENT) ||
+        this.peek_(TokenType.MULTI_LINE_COMMENT);
+    },
 
     /**
      * @return {boolean}

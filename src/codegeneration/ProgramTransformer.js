@@ -195,7 +195,9 @@ traceur.define('codegeneration', function() {
         ParseTreeValidator.validate(tree);
 
         // Issue errors for any unbound variables
-        FreeVariableChecker.checkProgram(this.reporter_, tree);
+        // HACK(ide): Commented out so it shuts up when we're not doing global
+        // static compilation.
+        //FreeVariableChecker.checkProgram(this.reporter_, tree);
       }
       return tree;
     },

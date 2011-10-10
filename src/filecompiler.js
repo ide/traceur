@@ -111,6 +111,14 @@
       var filename = file.name;
       var result = traceur.codegeneration.ParseTreeWriter.write(tree, false);
 
+      // Copy over the docblock at the top of the file if present.
+      var scanner = new traceur.syntax.Scanner(reporter, file);
+      scanner.skipWhitespace_();
+      var nextToken = scanner.scanToken_(true /* opt_scanComments */);
+      if (nextToken.type === traceur.syntax.TokenType.MULTI_LINE_COMMENT) {
+        result = nextToken.value + '\n' + result;
+      }
+
       // Compute the output path
       var outputdir = fs.realpathSync(process.cwd());
       var filedir = fs.realpathSync(path.dirname(filename));
